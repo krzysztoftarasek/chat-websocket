@@ -10,6 +10,7 @@ use Ratchet\ConnectionInterface;
 class Chat implements MessageComponentInterface {
 
   protected $clients;
+  protected $currentUser;
 
   public function __construct() {
     $this->clients = new \SplObjectStorage;
@@ -23,6 +24,7 @@ class Chat implements MessageComponentInterface {
   }
 
   public function onMessage(ConnectionInterface $from, $msg) {
+    $this->currentUser = $from;
     $numRecv = count($this->clients) - 1;
     echo sprintf(
       'Connection %d sending message "%s" to %d other connection%s' . "\n",
@@ -32,12 +34,8 @@ class Chat implements MessageComponentInterface {
       $numRecv == 1 ? '' : 's'
     );
 
-    foreach ($this->clients as $client) {
-      if ($from !== $client) {
-        // The sender is not the receiver, send to each client connected
-        $client->send(sprintf('User %s said: %s', $from->resourceId, $msg));
-      }
-    }
+    $broadcastMsg = sprintf('User %s said: %s', $from->resourceId, $msg);
+    $this->broadcast($broadcastMsg, true);
   }
 
   public function onClose(ConnectionInterface $conn) {
@@ -51,6 +49,13 @@ class Chat implements MessageComponentInterface {
     echo "An error has occurred: {$e->getMessage()}\n";
 
     $conn->close();
+  }
+
+  protected function broadcast($msg, bool $skipCurrentUser = true) {
+    foreach ($this->clients as $client) {
+      if ($skipCurrentUser && $this->currentUser === $client) continue;
+      $client->send($msg);
+    }
   }
 
 }

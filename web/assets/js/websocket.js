@@ -4,6 +4,7 @@
 
   let remainingAttempts = RECONNECT_ATTEMPTS;
   let controller;
+  let username;
 
   const retryConnecting = function(domain, callback) {
     controller = new AbortController();
@@ -39,6 +40,9 @@
     else {
       controller.abort();
       retryConnecting(DOMAIN, wsClbAction);
+
+      document.querySelector('.js-chat-content').classList.add('d-none');
+      document.querySelector('.js-spinner').classList.remove('d-none');
     }
   };
 
@@ -61,11 +65,44 @@
     };
 
     document.querySelector('.js-ws-test').addEventListener('click', testBtnEvent.bind(null, ws), {signal: controller.signal});
+
+    document.querySelector('.js-chat-content').classList.remove('d-none');
+    document.querySelector('.js-spinner').classList.add('d-none');
+    document.querySelector('.js-error-msg').classList.add('d-none');
+
+    if (!username) {
+      login();
+    }
   };
 
   const errorAction = function(ws) {
-    alert('Wystapił błąd wewnętrzny serwera. Spróbuj ponownie później!');
     ws.close();
+
+    document.querySelector('.js-chat-content').classList.add('d-none');
+    document.querySelector('.js-spinner').classList.add('d-none');
+    document.querySelector('.js-error-msg').classList.remove('d-none');
+  };
+
+  const login = () => {
+    username = prompt('Enter your username');
+
+    if (!username) {
+      login();
+      return;
+    }
+
+    addUser();
+  };
+
+  const addUser = (name) => {
+    // Clone the first snow flake container and append the clone to the body
+    const userEl = document.querySelector('.js-sample-user').cloneNode(true);
+    userEl.classList.remove('d-none');
+    userEl.classList.remove('js-sample-user');
+    userEl.classList.add('list-group-item');
+    userEl.querySelector('.js-user-name').innerHTML = name ? name : username;
+    userEl.querySelector('.js-user-id').innerHTML = 0;
+    document.querySelector('.js-users-list').appendChild(userEl);
   };
 
   retryConnecting(DOMAIN, wsClbAction);
