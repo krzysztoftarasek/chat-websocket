@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-use WebsocketSample\Chat;
+use ChatWebsocket\Chat;
 
   require dirname(__DIR__) . '/vendor/autoload.php';
 
